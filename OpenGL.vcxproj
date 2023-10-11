@@ -134,10 +134,21 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Source\Application.cpp" />
+    <ClCompile Include="Source\IndexBuffer.cpp" />
+    <ClCompile Include="Source\Renderer.cpp" />
+    <ClCompile Include="Source\ShaderHandler.cpp" />
+    <ClCompile Include="Source\VertexBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="README.md" />
     <None Include="Resources\Shaders\BasicFragment.shader" />
     <None Include="Resources\Shaders\BasicVertex.shader" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\IndexBuffer.h" />
+    <ClInclude Include="Source\Renderer.h" />
+    <ClInclude Include="Source\ShaderHandler.h" />
+    <ClInclude Include="Source\VertexBuffer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
