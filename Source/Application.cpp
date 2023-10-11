@@ -6,6 +6,24 @@
 #include <string>
 #include <sstream>
 
+#define ASSERT(x) if (!(x)) __debugbreak();
+#define GLCheck(x) GLClearError();\
+    x;\
+    ASSERT(GLCheckError(__FILE__, #x, __LINE__));
+
+static void GLClearError() { while (glGetError() != 0) {} }
+
+static bool GLCheckError(const char* fileName, const char* functionName, int line)
+{
+    while (GLenum error = glGetError())
+    {
+        std::cout << "!!Error!! " << error << ":" << fileName << ", " << functionName << ", Line " << line << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
 struct ShaderSource
 {
     std::string VertexSource;
@@ -101,8 +119,9 @@ int main(void)
         return -1;
     }
 
-    /* Make the window's context current */
+    // Make the current context the window and set its refresh rate to sync with the monitors
     glfwMakeContextCurrent(window);
+    glfwSwapInterval(1);
 
     if (glewInit() != GLEW_OK)
     {
@@ -110,35 +129,78 @@ int main(void)
         return -1;
     }
 
-    const int flarryCount = 6;
-    float flarray[6] =
+    const int vertexArrayCount = 30;
+    float vertexArray[30] =
     {
-        -0.5f, -0.5f,
-         0.0f,  0.5f,
-         0.5f, -0.5f
+        -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+         0.5f, -0.5f, 0.0f, 0.0f, 1.0f,
+        -0.5f,  0.5f, 1.0f, 0.0f, 0.0f,
+         0.5f,  0.5f, 0.0f, 0.0f, 1.0f
     };
 
-    unsigned int buffer;
-    glGenBuffers(1, &buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, (flarryCount * sizeof(float)), flarray, GL_DYNAMIC_DRAW);
+    const int indexBufferCount = 6;
+    unsigned int indexBuffer[] =
+    {
+        0, 1, 2, 
+        1, 3, 2
+    };
 
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, (sizeof(float) * 2), 0);
-    glEnableVertexAttribArray(0);
+    //Parsing and using shaders
+    std::string vertexShaderPath = "Resources\\Shaders\\BasicVertex.shader";
+    std::string fragmentShaderPath = "Resources\\Shaders\\BasicFragment.shader";
 
-    ShaderSource shaders = parseShader("Resources\\Shaders\\BasicVertex.shader", "Resources\\Shaders\\BasicFragment.shader");
-    std::cout << shaders.VertexSource << std::endl << shaders.FragmentSource << std::endl;
-
+    ShaderSource shaders = parseShader(vertexShaderPath, fragmentShaderPath);
     unsigned int shader = CreateShader(shaders.VertexSource, shaders.FragmentSource);
     glUseProgram(shader);
 
-    /* Loop until the user closes the window */
+    //Creating and binding a Vertex Attrib Array
+    unsigned int vertexAttribArrayID;
+    glGenVertexArrays(1, &vertexAttribArrayID);
+    glBindVertexArray(vertexAttribArrayID);
+
+    //Vertex Buffer
+    unsigned int vertexBuffer;
+    glGenBuffers(1, &vertexBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, (sizeof(float) * vertexArrayCount), vertexArray, GL_STATIC_DRAW);
+    
+    //Vertex Attributes
+    //Position Attribute
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, (sizeof(float) * 5), 0);
+    glEnableVertexAttribArray(0);
+    //Colour Attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, (sizeof(float) * 5), (void*)(sizeof(float) * 2));
+    glEnableVertexAttribArray(1);
+
+    //Index Buffer
+    unsigned int indexBufferObject;
+    glGenBuffers(1, &indexBufferObject);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferObject);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, (sizeof(unsigned int) * indexBufferCount), indexBuffer, GL_STATIC_DRAW);
+
+    int location = glGetUniformLocation(shader, "u_Scale");
+    float scale = 0.5f;
+    float scaleUp = 0.05f;
+
+    //Main Loop
     while (!glfwWindowShouldClose(window))
     {
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        if (scale >= 2)
+        {
+            scaleUp = -0.05f;
+        }
+        else if (scale <= 0.5)
+        {
+            scaleUp = 0.05f;
+        }
+
+        scale += scaleUp;
+        glUniform1f(location, scale);
+
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);

@@ -1,2 +1,4 @@
 G:\My Drive\Project\C++ Learning\OpenGL\x64\Debug\OpenGL.exe
 H:\My Drive\Project\C++ Learning\OpenGL\x64\Debug\OpenGL.exe
+G:\My Drive\Project\OpenGLLearning\x64\Debug\OpenGL.exe
+H:\My Drive\Project\OpenGLLearning\x64\Debug\OpenGL.exe
